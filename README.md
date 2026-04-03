@@ -196,8 +196,13 @@ Coverage includes integration tests for:
 
 ## Scripts
 
-- `npm run dev` - Start development server with hot reload.
-- `npm run build` - Compile TypeScript into `dist/`.
-- `npm run start` - Run compiled application.
-- `npm run seed` - Seed database with users and sample records.
-- `npm run db:migrate` - Run Prisma development migrations.
+- `npm run dev` - Start development server with hot reload
+- `npm run build` - Compile TypeScript into dist/
+- `npm run start` - Run compiled application
+- `npm run seed` - Seed database with users and sample records
+- `npm run db:migrate` - Run Prisma development migrations
+- `npm run db:studio` - Open Prisma Studio to inspect the database visually
+- `npm test` - Run test suite with coverage report
+- `npm run test:watch` - Run tests in watch mode
+- `npm run lint` - Run ESLint across src/
+- `npm run lint:fix` - Auto-fix ESLint issues
