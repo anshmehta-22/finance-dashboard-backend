@@ -1,0 +1,35 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String            @id @default(uuid())
+  email        String            @unique
+  passwordHash String
+  role         String            @default("VIEWER")
+  isActive     Boolean           @default(true)
+  createdAt    DateTime          @default(now())
+  records      FinancialRecord[]
+}
+
+model FinancialRecord {
+  id          String     @id @default(uuid())
+  amount      Float
+  type        String
+  category    String
+  date        DateTime
+  notes       String?
+  deletedAt   DateTime?
+  createdById String
+  createdBy   User       @relation(fields: [createdById], references: [id])
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
