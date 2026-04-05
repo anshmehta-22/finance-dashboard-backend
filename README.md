@@ -7,10 +7,18 @@ Role-based backend API for a finance dashboard with secure auth, record manageme
 - TypeScript
 - Node.js + Express
 - Prisma ORM
-- SQLite
+- SQLite (local development) / PostgreSQL (production)
 - JWT (`jsonwebtoken`)
 - Zod (request validation)
 - Swagger (`swagger-jsdoc`, `swagger-ui-express`)
+
+## Live Deployment
+
+**Production URL:** https://finance-dashboard-backend-production-0afc.up.railway.app
+
+**API Documentation:** https://finance-dashboard-backend-production-0afc.up.railway.app/api/docs
+
+Deployed on Railway with PostgreSQL database.
 
 ## Prerequisites
 
@@ -118,13 +126,25 @@ Swagger UI is available at:
 
 ## Seed Credentials
 
-After running `npm run seed`, these accounts are available (with passwords from your `.env`):
+After running `npm run seed`, these accounts are available.
 
-- Admin: `admin@finance.com` / `SEED_ADMIN_PASSWORD`
-- Analyst: `analyst@finance.com` / `SEED_ANALYST_PASSWORD`
-- Viewer: `viewer@finance.com` / `SEED_VIEWER_PASSWORD`
+Passwords are defined by you in `.env`:
 
-No weak default seed passwords are used.
+| Role    | Email               | .env Variable         |
+| ------- | ------------------- | --------------------- |
+| Admin   | admin@finance.com   | SEED_ADMIN_PASSWORD   |
+| Analyst | analyst@finance.com | SEED_ANALYST_PASSWORD |
+| Viewer  | viewer@finance.com  | SEED_VIEWER_PASSWORD  |
+
+Example values to add to your `.env` before seeding:
+
+```
+SEED_ADMIN_PASSWORD=Adm3c22de22ef365299c3a913479
+SEED_ANALYST_PASSWORD=Anl7323e05ce67165fda1c7fbf48
+SEED_VIEWER_PASSWORD=Vwrd59c3d1badbd960c36a3ee8b7
+```
+
+No weak default passwords are hardcoded anywhere in the project.
 
 ## Rate Limiting
 
@@ -161,10 +181,58 @@ Coverage includes integration tests for:
 
 ## Design Decisions & Tradeoffs
 
-- SQLite was chosen for zero-config local development; Prisma ORM keeps switching to PostgreSQL straightforward.
-- Soft delete was chosen over hard delete so financial records preserve audit history.
-- RBAC uses permission strings instead of hardcoded role checks per route, so adding roles/permissions is mostly a config change.
-- Rate limiting is two-tiered: a general limiter for broad abuse protection and a stricter auth limiter for brute-force resistance.
+- **TypeScript** chosen for compile-time safety — role and permission strings must match exactly across middleware and routes, and type errors catch these mismatches before runtime.
+- **SQLite + Prisma** for local development; PostgreSQL for production on Railway. Switching required only a one-line datasource change in `schema.prisma` — no application code touched.
+- **Permission-string RBAC** over hardcoded role checks — adding a new role or changing permissions is a config change in one file (`rbac.middleware.ts`), not a change across every route.
+- **Soft delete over hard delete** — financial records should never be permanently destroyed. The `deletedAt` field preserves audit history and keeps records recoverable by admin.
+- **Two-tier rate limiting** — auth endpoints have a stricter limit (10 req/15min) than the general API (100 req/15min) because login is the primary brute-force target.
+- **JWT over sessions** — stateless auth means no session storage needed; the backend scales horizontally without instance coordination.
+- **Seed passwords via env vars** — avoids hardcoded weak credentials even in development seed data.
+- **Trust proxy enabled** — required for Railway deployment so rate limiting and IP detection work correctly behind Railway's reverse proxy.
+
+## Production Deployment
+
+The project is live on Railway with a PostgreSQL database.
+
+**Live URL:** https://finance-dashboard-backend-production-0afc.up.railway.app
+
+**Swagger Docs:** https://finance-dashboard-backend-production-0afc.up.railway.app/api/docs
+
+### Migrating from SQLite to PostgreSQL
+
+Only two things change:
+
+1. Update `prisma/schema.prisma` datasource:
+
+```prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+```
+
+2. Set `DATABASE_URL` to a PostgreSQL connection string in your environment.
+
+Then run:
+
+```bash
+npx prisma migrate deploy
+```
+
+No application code changes needed.
+
+### Railway Setup (reference)
+
+- Add PostgreSQL plugin — Railway injects `DATABASE_URL` automatically
+- Set `JWT_SECRET`, `NODE_ENV=production`, and seed passwords in Railway dashboard
+- Start command: `npm run build && npx prisma migrate deploy && npm start`
+- Seed once after first deploy via Railway terminal: `npm run seed`
+
+### Known Production Limitations
+
+- Rate limiting is in-memory — works for single instance; needs a Redis-backed store for horizontal scaling
+- JWT tokens are valid until expiry — no revocation mechanism; mitigated by short expiry window
+- Trends grouping is done at the application layer due to SQLite's lack of `date_trunc`; in PostgreSQL this would be a cleaner raw SQL query
 
 ## Folder Structure Overview
 

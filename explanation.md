@@ -21,15 +21,16 @@ Backend API for a finance dashboard with:
 
 ## Technical Stack
 
-| Layer      | Choice     | Reason                                     |
-| ---------- | ---------- | ------------------------------------------ |
-| Language   | TypeScript | Strong typing and safer refactoring        |
-| Framework  | Express    | Lightweight, explicit request pipeline     |
-| ORM        | Prisma     | Typed DB access and migration workflow     |
-| Database   | SQLite     | Zero-infra local development               |
-| Validation | Zod        | Runtime validation aligned with TypeScript |
-| Auth       | JWT        | Stateless, standard API authentication     |
-| API Docs   | Swagger    | Fast endpoint discoverability and testing  |
+| Layer      | Choice                   | Reason                                     |
+| ---------- | ------------------------ | ------------------------------------------ |
+| Language   | TypeScript               | Strong typing and safer refactoring        |
+| Framework  | Express                  | Lightweight, explicit request pipeline     |
+| ORM        | Prisma                   | Typed DB access and migration workflow     |
+| Database   | SQLite (dev) / PostgreSQL (prod) | Zero-infra local development, production-ready deployment |
+| Validation | Zod                      | Runtime validation aligned with TypeScript |
+| Auth       | JWT                      | Stateless, standard API authentication     |
+| API Docs   | Swagger                  | Fast endpoint discoverability and testing  |
+| Deployment | Railway                  | Simple cloud deployment with PostgreSQL    |
 
 ## Data Model
 
@@ -39,13 +40,14 @@ Backend API for a finance dashboard with:
 
 `FinancialRecord`
 
-- `id`, `amount`, `type`, `category`, `date`, `notes`, `createdById`, `createdAt`, `updatedAt`
+- `id`, `amount`, `type`, `category`, `date`, `notes`, `createdById`, `createdAt`, `updatedAt`, `deletedAt`
 
 Notes:
 
 - `role` and `type` are persisted as strings (`VIEWER|ANALYST|ADMIN`, `INCOME|EXPENSE`).
 - API-level validation restricts accepted values.
 - `FinancialRecord.createdById -> User.id` keeps authorship traceable.
+- `deletedAt` is nullable — `null` means active, a timestamp means soft-deleted. All standard queries filter `deletedAt: null` to exclude deleted records.
 
 ## RBAC Model
 
@@ -114,10 +116,42 @@ Password handling:
 
 ## Operational Notes
 
-- API docs: `http://localhost:3000/api/docs`
+- Local API docs: `http://localhost:3000/api/docs`
+- Production API docs: `https://finance-dashboard-backend-production-0afc.up.railway.app/api/docs`
 - Health endpoint: `GET /health`
 - Build command: `npm run build`
 - Dev command: `npm run dev`
+
+## Production Deployment
+
+The application is deployed on Railway with the following configuration:
+
+- **Platform:** Railway (https://railway.app)
+- **Database:** PostgreSQL (migrated from SQLite for local development)
+- **Build Process:** Automated via `nixpacks.toml` configuration
+- **Environment Variables:** Securely stored in Railway dashboard (JWT_SECRET, SEED_* passwords)
+- **Database Migration:** Achieved by changing only the Prisma datasource provider from `sqlite` to `postgresql`
+- **Deployment URL:** https://finance-dashboard-backend-production-0afc.up.railway.app
+
+Key deployment features:
+- Automatic deployments on git push to main branch
+- PostgreSQL database with automatic connection string injection
+- Trust proxy enabled for proper IP detection behind Railway's reverse proxy
+- Swagger documentation accessible at production URL
+
+### PostgreSQL Migration Notes
+
+Switching from SQLite to PostgreSQL required only:
+- Changing `provider` in `prisma/schema.prisma` from `"sqlite"` to `"postgresql"`
+- Updating `DATABASE_URL` to the Railway PostgreSQL connection string
+
+No service, controller, or middleware code was touched. This validates the Prisma database-agnostic architecture decision.
+
+### Known Limitations in Production
+
+- Rate limiting is in-memory — sufficient for single-instance deployment but needs a Redis-backed store (e.g. `rate-limit-redis`) for horizontal scaling
+- No JWT token revocation — tokens are valid until expiry; acceptable at this scope, mitigated by 7-day expiry window
+- Trends grouping runs at the application layer (JS-level groupBy after Prisma fetch) because SQLite lacks `date_trunc`. In PostgreSQL this would be a more efficient raw SQL query — noted as a future improvement
 
 ## Build Order
 
@@ -141,11 +175,17 @@ Password handling:
 | 2026-04-04 | Added two-tier rate limiting                        | General API protection plus stricter auth endpoint protection against brute force |
 | 2026-04-04 | Added records search query support                  | Combined search with existing filters using a Prisma `OR` clause                  |
 | 2026-04-04 | Added integration tests with Jest + Supertest       | Validates auth, records, dashboard, and RBAC behavior end to end                  |
+| 2026-04-05 | Deployed to Railway with PostgreSQL                 | Validates Prisma's database-agnostic design; migration required only a datasource config change |
+| 2026-04-05 | Trust proxy enabled in Express | Required for correct IP detection and rate limiting behind Railway's reverse proxy |
 
 ## If You Feel Lost
 
 - Tests failing? Check whether `test.db` is corrupted. Delete it and rerun `npm test`.
 - Rate limit hitting in dev? Temporarily increase `max` values in `src/config/rateLimiter.ts`.
+- Seed failing? Make sure `SEED_ADMIN_PASSWORD`, `SEED_ANALYST_PASSWORD`, and `SEED_VIEWER_PASSWORD` are all set in `.env` before running `npm run seed`
+- ESLint not running? Run `npm install` first — the TypeScript ESLint parser is in devDependencies
+- Server not starting? Port 3000 may be in use — change `PORT` in `.env` or kill the existing process
+- Production not reflecting changes? Railway auto-deploys on push to main — check the Railway dashboard build logs
 
 ## Maintenance Guideline
 
