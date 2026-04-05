@@ -1,6 +1,6 @@
-import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
-import { env } from "../src/config/env";
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+import { env } from '../src/config/env';
 
 const prisma = new PrismaClient();
 
@@ -22,15 +22,15 @@ const requireSeedPassword = (key: string, value?: string): string => {
 
 async function main() {
   const adminSeedPassword = requireSeedPassword(
-    "SEED_ADMIN_PASSWORD",
+    'SEED_ADMIN_PASSWORD',
     env.SEED_ADMIN_PASSWORD,
   );
   const analystSeedPassword = requireSeedPassword(
-    "SEED_ANALYST_PASSWORD",
+    'SEED_ANALYST_PASSWORD',
     env.SEED_ANALYST_PASSWORD,
   );
   const viewerSeedPassword = requireSeedPassword(
-    "SEED_VIEWER_PASSWORD",
+    'SEED_VIEWER_PASSWORD',
     env.SEED_VIEWER_PASSWORD,
   );
 
@@ -39,46 +39,46 @@ async function main() {
   const viewerPassword = await bcrypt.hash(viewerSeedPassword, 10);
 
   const admin = await prisma.user.upsert({
-    where: { email: "admin@finance.com" },
+    where: { email: 'admin@finance.com' },
     update: {
       passwordHash: adminPassword,
-      role: "ADMIN",
+      role: 'ADMIN',
       isActive: true,
     },
     create: {
-      email: "admin@finance.com",
+      email: 'admin@finance.com',
       passwordHash: adminPassword,
-      role: "ADMIN",
+      role: 'ADMIN',
       isActive: true,
     },
   });
 
   const analyst = await prisma.user.upsert({
-    where: { email: "analyst@finance.com" },
+    where: { email: 'analyst@finance.com' },
     update: {
       passwordHash: analystPassword,
-      role: "ANALYST",
+      role: 'ANALYST',
       isActive: true,
     },
     create: {
-      email: "analyst@finance.com",
+      email: 'analyst@finance.com',
       passwordHash: analystPassword,
-      role: "ANALYST",
+      role: 'ANALYST',
       isActive: true,
     },
   });
 
   const viewer = await prisma.user.upsert({
-    where: { email: "viewer@finance.com" },
+    where: { email: 'viewer@finance.com' },
     update: {
       passwordHash: viewerPassword,
-      role: "VIEWER",
+      role: 'VIEWER',
       isActive: true,
     },
     create: {
-      email: "viewer@finance.com",
+      email: 'viewer@finance.com',
       passwordHash: viewerPassword,
-      role: "VIEWER",
+      role: 'VIEWER',
       isActive: true,
     },
   });
@@ -86,93 +86,93 @@ async function main() {
   const seedYear = 2024;
   const sampleRecords = [
     {
-      id: "seed-record-001",
+      id: 'seed-record-001',
       amount: 6200,
-      type: "INCOME",
-      category: "Salary",
+      type: 'INCOME',
+      category: 'Salary',
       date: new Date(seedYear, 0, 2),
-      notes: "Monthly salary payout",
+      notes: 'Monthly salary payout',
       createdById: admin.id,
     },
     {
-      id: "seed-record-002",
+      id: 'seed-record-002',
       amount: 85,
-      type: "EXPENSE",
-      category: "Food",
+      type: 'EXPENSE',
+      category: 'Food',
       date: new Date(seedYear, 0, 5),
-      notes: "Groceries and snacks",
+      notes: 'Groceries and snacks',
       createdById: viewer.id,
     },
     {
-      id: "seed-record-003",
+      id: 'seed-record-003',
       amount: 140,
-      type: "EXPENSE",
-      category: "Utilities",
+      type: 'EXPENSE',
+      category: 'Utilities',
       date: new Date(seedYear, 0, 8),
-      notes: "Electricity and internet bills",
+      notes: 'Electricity and internet bills',
       createdById: analyst.id,
     },
     {
-      id: "seed-record-004",
+      id: 'seed-record-004',
       amount: 60,
-      type: "EXPENSE",
-      category: "Transport",
+      type: 'EXPENSE',
+      category: 'Transport',
       date: new Date(seedYear, 0, 12),
-      notes: "Metro and rideshare expenses",
+      notes: 'Metro and rideshare expenses',
       createdById: analyst.id,
     },
     {
-      id: "seed-record-005",
+      id: 'seed-record-005',
       amount: 95,
-      type: "EXPENSE",
-      category: "Entertainment",
+      type: 'EXPENSE',
+      category: 'Entertainment',
       date: new Date(seedYear, 0, 16),
-      notes: "Movie and streaming subscriptions",
+      notes: 'Movie and streaming subscriptions',
       createdById: viewer.id,
     },
     {
-      id: "seed-record-006",
+      id: 'seed-record-006',
       amount: 6100,
-      type: "INCOME",
-      category: "Salary",
+      type: 'INCOME',
+      category: 'Salary',
       date: new Date(seedYear, 1, 2),
-      notes: "Previous month salary",
+      notes: 'Previous month salary',
       createdById: admin.id,
     },
     {
-      id: "seed-record-007",
+      id: 'seed-record-007',
       amount: 78,
-      type: "EXPENSE",
-      category: "Food",
+      type: 'EXPENSE',
+      category: 'Food',
       date: new Date(seedYear, 1, 7),
-      notes: "Weekly meal prep shopping",
+      notes: 'Weekly meal prep shopping',
       createdById: analyst.id,
     },
     {
-      id: "seed-record-008",
+      id: 'seed-record-008',
       amount: 132,
-      type: "EXPENSE",
-      category: "Utilities",
+      type: 'EXPENSE',
+      category: 'Utilities',
       date: new Date(seedYear, 2, 6),
-      notes: "Water and gas bills",
+      notes: 'Water and gas bills',
       createdById: viewer.id,
     },
     {
-      id: "seed-record-009",
+      id: 'seed-record-009',
       amount: 55,
-      type: "EXPENSE",
-      category: "Transport",
+      type: 'EXPENSE',
+      category: 'Transport',
       date: new Date(seedYear, 2, 11),
-      notes: "Fuel and parking",
+      notes: 'Fuel and parking',
       createdById: analyst.id,
     },
     {
-      id: "seed-record-010",
+      id: 'seed-record-010',
       amount: 120,
-      type: "EXPENSE",
-      category: "Entertainment",
+      type: 'EXPENSE',
+      category: 'Entertainment',
       date: new Date(seedYear, 2, 20),
-      notes: "Weekend outing",
+      notes: 'Weekend outing',
       createdById: admin.id,
     },
   ];
@@ -191,7 +191,8 @@ async function main() {
 }
 
 main()
-  .catch(() => {
+  .catch((e) => {
+    console.error('Seed failed:', e);
     process.exit(1);
   })
   .finally(async () => {
