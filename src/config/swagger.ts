@@ -10,11 +10,11 @@ const options: swaggerJsdoc.Options = {
     },
     servers: [
       {
-        url: `http://localhost:${process.env.PORT || 3000}/api`,
+        url: `http://localhost:${process.env.PORT || 3000}`,
         description: 'Local development server',
       },
       {
-        url: `https://finance-dashboard-backend-production-0afc.up.railway.app/api`,
+        url: `https://finance-dashboard-backend-production-0afc.up.railway.app`,
         description: 'Railway server',
       },
     ],
