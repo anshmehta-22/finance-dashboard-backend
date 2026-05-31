@@ -30,7 +30,7 @@ Backend API for a finance dashboard with:
 | Validation | Zod                      | Runtime validation aligned with TypeScript |
 | Auth       | JWT                      | Stateless, standard API authentication     |
 | API Docs   | Swagger                  | Fast endpoint discoverability and testing  |
-| Deployment | Railway                  | Simple cloud deployment with PostgreSQL    |
+| Deployment | Render (backend) + Supabase (database) | Free hosting with persistent PostgreSQL, no session limits |
 
 ## Data Model
 
@@ -117,41 +117,48 @@ Password handling:
 ## Operational Notes
 
 - Local API docs: `http://localhost:3000/api/docs`
-- Production API docs: `https://finance-dashboard-backend-production-0afc.up.railway.app/api/docs`
+- Production API docs: `https://finance-data-processing-nn74.onrender.com/api/docs`
 - Health endpoint: `GET /health`
 - Build command: `npm run build`
 - Dev command: `npm run dev`
 
 ## Production Deployment
 
-The application is deployed on Railway with the following configuration:
+**Stack: Render (backend) + Supabase (database)**
 
-- **Platform:** Railway (https://railway.app)
-- **Database:** PostgreSQL (migrated from SQLite for local development)
-- **Build Process:** Automated via `nixpacks.toml` configuration
-- **Environment Variables:** Securely stored in Railway dashboard (JWT_SECRET, SEED_* passwords)
-- **Database Migration:** Achieved by changing only the Prisma datasource provider from `sqlite` to `postgresql`
-- **Deployment URL:** https://finance-dashboard-backend-production-0afc.up.railway.app
+The application is deployed on Render with Supabase PostgreSQL:
 
-Key deployment features:
-- Automatic deployments on git push to main branch
-- PostgreSQL database with automatic connection string injection
-- Trust proxy enabled for proper IP detection behind Railway's reverse proxy
-- Swagger documentation accessible at production URL
+- **Backend Platform:** Render (https://render.com)
+- **Database:** Supabase PostgreSQL (https://supabase.com) — free tier with no session limits
+- **Database Connection:** Direct connection (port 5432) for schema engine compatibility
+- **Build Process:** Automated via git push to main branch
+- **Environment Variables:** Securely stored in Render dashboard
+  - `DATABASE_URL`: Supabase direct connection string
+  - `JWT_SECRET`: 32-byte random hex string
+  - `SEED_*_PASSWORD`: Strong passwords for seed users
+  - `NODE_ENV`: `production`
+  - `PORT`: `3000`
+- **Deployment URL:** https://finance-data-processing-nn74.onrender.com
+- **Build Command:** `NODE_ENV=development npm install && npx prisma generate && npm run build`
+- **Start Command:** `node dist/server.js`
 
-### PostgreSQL Migration Notes
+### Database Migration
 
-Switching from SQLite to PostgreSQL required only:
-- Changing `provider` in `prisma/schema.prisma` from `"sqlite"` to `"postgresql"`
-- Updating `DATABASE_URL` to the Railway PostgreSQL connection string
+Migrating from local SQLite to Supabase PostgreSQL involved:
 
-No service, controller, or middleware code was touched. This validates the Prisma database-agnostic architecture decision.
+1. Create Supabase project and get connection credentials
+2. Generate initial migration: `npx prisma migrate dev --name init`
+3. Apply migration: `npx prisma migrate deploy`
+4. Seed data: `npm run seed`
+5. Update Render environment with `DATABASE_URL` pointing to Supabase
+
+Key insight: Prisma's database-agnostic architecture meant schema and queries required no changes — only the datasource connection URL changed.
 
 ### Known Limitations in Production
 
 - Rate limiting is in-memory — sufficient for single-instance deployment but needs a Redis-backed store (e.g. `rate-limit-redis`) for horizontal scaling
 - No JWT token revocation — tokens are valid until expiry; acceptable at this scope, mitigated by 7-day expiry window
-- Trends grouping runs at the application layer (JS-level groupBy after Prisma fetch) because SQLite lacks `date_trunc`. In PostgreSQL this would be a more efficient raw SQL query — noted as a future improvement
+- Cold starts on Render (~30s after inactivity) — acceptable for portfolio use
 
 ## Build Order
 
@@ -177,6 +184,7 @@ No service, controller, or middleware code was touched. This validates the Prism
 | 2026-04-04 | Added integration tests with Jest + Supertest       | Validates auth, records, dashboard, and RBAC behavior end to end                  |
 | 2026-04-05 | Deployed to Railway with PostgreSQL                 | Validates Prisma's database-agnostic design; migration required only a datasource config change |
 | 2026-04-05 | Trust proxy enabled in Express | Required for correct IP detection and rate limiting behind Railway's reverse proxy |
+| 2026-06-01 | Migrated to Render + Supabase | Free tier without session limits; Supabase provides persistent PostgreSQL without infrastructure management |
 
 ## If You Feel Lost
 
@@ -185,7 +193,8 @@ No service, controller, or middleware code was touched. This validates the Prism
 - Seed failing? Make sure `SEED_ADMIN_PASSWORD`, `SEED_ANALYST_PASSWORD`, and `SEED_VIEWER_PASSWORD` are all set in `.env` before running `npm run seed`
 - ESLint not running? Run `npm install` first — the TypeScript ESLint parser is in devDependencies
 - Server not starting? Port 3000 may be in use — change `PORT` in `.env` or kill the existing process
-- Production not reflecting changes? Railway auto-deploys on push to main — check the Railway dashboard build logs
+- Production not reflecting changes? Render auto-deploys on push to main — check the Render dashboard build logs
+- Can't connect to Supabase during migration? Use the direct connection URL (port 5432, not pooler port 6543) — the connection pooler has compatibility issues with Prisma's schema engine
 
 ## Maintenance Guideline
 

@@ -1,12 +1,11 @@
-import { Prisma, PrismaClient } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import prisma from '../../config/prisma';
 import { AppError } from '../../middleware/error.middleware';
 import {
   CreateRecordInput,
   FilterInput,
   UpdateRecordInput,
 } from './records.schema';
-
-const prisma = new PrismaClient();
 
 export class RecordsService {
   async getRecords(filters: FilterInput) {

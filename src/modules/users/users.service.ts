@@ -1,9 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../config/prisma';
 import bcrypt from 'bcryptjs';
 import { CreateUserInput } from './users.schema';
 import { AppError } from '../../middleware/error.middleware';
-
-const prisma = new PrismaClient();
 
 export class UsersService {
   async getAllUsers() {

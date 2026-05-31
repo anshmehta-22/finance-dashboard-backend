@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../src/config/prisma';
 import bcrypt from 'bcryptjs';
 import { env } from '../src/config/env';
-
-const prisma = new PrismaClient();
 
 const requireSeedPassword = (key: string, value?: string): string => {
   if (!value) {
