@@ -77,7 +77,11 @@ npm run dev
 
 Swagger UI is available at:
 
-- `http://localhost:3000/api/docs`
+- **Local:** `http://localhost:3000/api/docs`
+- **Production:** `https://finance-dashboard-backend-production-0afc.up.railway.app/api/docs`
+
+The production Swagger UI is live and fully interactive — 
+No local setup needed to explore the API.
 
 ## API Endpoints
 
