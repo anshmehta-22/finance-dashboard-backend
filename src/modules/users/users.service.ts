@@ -1,15 +1,9 @@
-import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
-import { CreateUserInput } from "./users.schema";
-import { AppError } from "../../middleware/error.middleware";
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+import { CreateUserInput } from './users.schema';
+import { AppError } from '../../middleware/error.middleware';
 
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL,
-    },
-  },
-});
+const prisma = new PrismaClient();
 
 export class UsersService {
   async getAllUsers() {
@@ -22,7 +16,7 @@ export class UsersService {
         createdAt: true,
       },
       orderBy: {
-        createdAt: "desc",
+        createdAt: 'desc',
       },
     });
   }
@@ -40,7 +34,7 @@ export class UsersService {
     });
 
     if (!user) {
-      throw new AppError("User not found", 404);
+      throw new AppError('User not found', 404);
     }
 
     return user;
@@ -51,7 +45,7 @@ export class UsersService {
       where: { email: data.email },
     });
     if (existingUser) {
-      throw new AppError("User already exists", 409);
+      throw new AppError('User already exists', 409);
     }
 
     const passwordHash = await bcrypt.hash(data.password, 10);
@@ -72,10 +66,10 @@ export class UsersService {
     });
   }
 
-  async updateRole(id: string, role: "VIEWER" | "ANALYST" | "ADMIN") {
+  async updateRole(id: string, role: 'VIEWER' | 'ANALYST' | 'ADMIN') {
     const user = await prisma.user.findUnique({ where: { id } });
     if (!user) {
-      throw new AppError("User not found", 404);
+      throw new AppError('User not found', 404);
     }
 
     return prisma.user.update({
@@ -94,7 +88,7 @@ export class UsersService {
   async toggleStatus(id: string, isActive: boolean) {
     const user = await prisma.user.findUnique({ where: { id } });
     if (!user) {
-      throw new AppError("User not found", 404);
+      throw new AppError('User not found', 404);
     }
 
     return prisma.user.update({

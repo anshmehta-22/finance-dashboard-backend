@@ -1,12 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL,
-    },
-  },
-});
+const prisma = new PrismaClient();
 
 export class DashboardService {
   async getSummary() {
@@ -47,7 +41,7 @@ export class DashboardService {
     type GroupedRecordRow = (typeof groupedRecords)[number];
 
     const mapCategoryRows = (
-      type: 'INCOME' | 'EXPENSE'
+      type: 'INCOME' | 'EXPENSE',
     ): Array<{ category: string; total: number; count: number }> =>
       groupedRecords
         .filter((record: GroupedRecordRow) => record.type === type)
@@ -79,12 +73,16 @@ export class DashboardService {
     const formatMonth = (date: Date) => date.toISOString().slice(0, 7);
 
     const getIsoWeekParts = (date: Date) => {
-      const target = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+      const target = new Date(
+        Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+      );
       const dayNumber = target.getUTCDay() || 7;
       target.setUTCDate(target.getUTCDate() + 4 - dayNumber);
       const isoYear = target.getUTCFullYear();
       const yearStart = new Date(Date.UTC(isoYear, 0, 1));
-      const weekNumber = Math.ceil((((target.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+      const weekNumber = Math.ceil(
+        ((target.getTime() - yearStart.getTime()) / 86400000 + 1) / 7,
+      );
 
       return { isoYear, weekNumber };
     };

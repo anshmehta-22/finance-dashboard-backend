@@ -1,18 +1,12 @@
-import { Prisma, PrismaClient } from "@prisma/client";
-import { AppError } from "../../middleware/error.middleware";
+import { Prisma, PrismaClient } from '@prisma/client';
+import { AppError } from '../../middleware/error.middleware';
 import {
   CreateRecordInput,
   FilterInput,
   UpdateRecordInput,
-} from "./records.schema";
+} from './records.schema';
 
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL,
-    },
-  },
-});
+const prisma = new PrismaClient();
 
 export class RecordsService {
   async getRecords(filters: FilterInput) {
@@ -53,7 +47,7 @@ export class RecordsService {
       prisma.financialRecord.findMany({
         where,
         orderBy: {
-          date: "desc",
+          date: 'desc',
         },
         skip,
         take: filters.limit,
@@ -96,7 +90,7 @@ export class RecordsService {
     });
 
     if (!record) {
-      throw new AppError("Record not found", 404);
+      throw new AppError('Record not found', 404);
     }
 
     return record;
@@ -133,7 +127,7 @@ export class RecordsService {
     });
 
     if (!record) {
-      throw new AppError("Record not found", 404);
+      throw new AppError('Record not found', 404);
     }
 
     return prisma.financialRecord.update({
@@ -160,7 +154,7 @@ export class RecordsService {
     });
 
     if (!record) {
-      throw new AppError("Record not found", 404);
+      throw new AppError('Record not found', 404);
     }
 
     await prisma.financialRecord.update({
@@ -170,7 +164,7 @@ export class RecordsService {
       },
     });
 
-    return { message: "Record deleted successfully" };
+    return { message: 'Record deleted successfully' };
   }
 
   async getDeletedRecords() {
@@ -181,7 +175,7 @@ export class RecordsService {
         },
       },
       orderBy: {
-        date: "desc",
+        date: 'desc',
       },
       include: {
         createdBy: {
@@ -206,7 +200,7 @@ export class RecordsService {
     });
 
     if (!record) {
-      throw new AppError("Record not found", 404);
+      throw new AppError('Record not found', 404);
     }
 
     return prisma.financialRecord.update({

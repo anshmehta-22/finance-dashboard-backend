@@ -1,17 +1,11 @@
-import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import { env } from "../../config/env";
-import { RegisterInput } from "./auth.schema";
-import { AppError } from "../../middleware/error.middleware";
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { env } from '../../config/env';
+import { RegisterInput } from './auth.schema';
+import { AppError } from '../../middleware/error.middleware';
 
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL,
-    },
-  },
-});
+const prisma = new PrismaClient();
 
 export class AuthService {
   async register(data: RegisterInput) {
@@ -19,7 +13,7 @@ export class AuthService {
       where: { email: data.email },
     });
     if (existingUser) {
-      throw new AppError("User already exists", 409);
+      throw new AppError('User already exists', 409);
     }
 
     const passwordHash = await bcrypt.hash(data.password, 10);
@@ -28,7 +22,7 @@ export class AuthService {
       data: {
         email: data.email,
         passwordHash,
-        role: data.role || "VIEWER",
+        role: data.role || 'VIEWER',
       },
     });
 
@@ -43,16 +37,16 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new AppError("Invalid credentials", 401);
+      throw new AppError('Invalid credentials', 401);
     }
 
     if (!user.isActive) {
-      throw new AppError("User account is inactive", 403);
+      throw new AppError('User account is inactive', 403);
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
-      throw new AppError("Invalid credentials", 401);
+      throw new AppError('Invalid credentials', 401);
     }
 
     const token = this.generateToken(user.id, user.email, user.role);
@@ -65,7 +59,7 @@ export class AuthService {
 
   private generateToken(userId: string, email: string, role: string): string {
     return jwt.sign({ userId, email, role }, env.JWT_SECRET, {
-      expiresIn: "7d",
+      expiresIn: '7d',
     });
   }
 }
