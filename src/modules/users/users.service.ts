@@ -3,7 +3,13 @@ import bcrypt from "bcryptjs";
 import { CreateUserInput } from "./users.schema";
 import { AppError } from "../../middleware/error.middleware";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL,
+    },
+  },
+});
 
 export class UsersService {
   async getAllUsers() {

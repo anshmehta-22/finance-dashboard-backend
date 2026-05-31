@@ -5,7 +5,13 @@ import { env } from "../../config/env";
 import { RegisterInput } from "./auth.schema";
 import { AppError } from "../../middleware/error.middleware";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL,
+    },
+  },
+});
 
 export class AuthService {
   async register(data: RegisterInput) {

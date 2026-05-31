@@ -6,7 +6,13 @@ import {
   UpdateRecordInput,
 } from "./records.schema";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL,
+    },
+  },
+});
 
 export class RecordsService {
   async getRecords(filters: FilterInput) {
