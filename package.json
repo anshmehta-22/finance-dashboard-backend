@@ -10,10 +10,14 @@
     "seed": "ts-node prisma/seed.ts",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
+    "db:setup": "ts-node scripts/setup-db.ts",
     "test": "jest --runInBand",
     "test:watch": "jest --watch",
     "lint": "eslint src/ --ext .ts",
     "lint:fix": "eslint src/ --ext .ts --fix"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   },
   "keywords": [
     "finance",
