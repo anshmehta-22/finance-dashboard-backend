@@ -6,12 +6,16 @@ export async function initializeDatabase(): Promise<void> {
   try {
     console.log('Checking database connection...');
 
-    // Test database connection
-    await prisma.$queryRaw`SELECT 1`;
-    console.log('✓ Database connected successfully');
-
-    // Check if we need to seed
-    const userCount = await prisma.user.count();
+    // Check if we need to seed by counting users
+    // Skip the SELECT 1 query as it conflicts with transaction pooler
+    let userCount = 0;
+    try {
+      userCount = await prisma.user.count();
+      console.log('✓ Database connected successfully');
+    } catch (connError: any) {
+      // If connection fails, still try to initialize
+      console.warn('⚠️  Initial connection check failed, retrying with seed...');
+    }
 
     if (userCount === 0) {
       console.log('Database is empty, seeding initial data...');
