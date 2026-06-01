@@ -19,6 +19,11 @@ const requireSeedPassword = (key: string, value?: string): string => {
 };
 
 async function main() {
+  console.log('Starting seed process...');
+  console.log('SEED_ADMIN_PASSWORD:', env.SEED_ADMIN_PASSWORD ? 'SET' : 'NOT SET');
+  console.log('SEED_ANALYST_PASSWORD:', env.SEED_ANALYST_PASSWORD ? 'SET' : 'NOT SET');
+  console.log('SEED_VIEWER_PASSWORD:', env.SEED_VIEWER_PASSWORD ? 'SET' : 'NOT SET');
+
   const adminSeedPassword = requireSeedPassword(
     'SEED_ADMIN_PASSWORD',
     env.SEED_ADMIN_PASSWORD,
@@ -31,6 +36,8 @@ async function main() {
     'SEED_VIEWER_PASSWORD',
     env.SEED_VIEWER_PASSWORD,
   );
+  
+  console.log('Password validation passed, creating users...');
 
   const adminPassword = await bcrypt.hash(adminSeedPassword, 10);
   const analystPassword = await bcrypt.hash(analystSeedPassword, 10);
@@ -50,6 +57,9 @@ async function main() {
       isActive: true,
     },
   });
+  console.log('✓ Admin user created/updated:', admin.email);
+
+  console.log('✓ Admin user created/updated:', admin.email);
 
   const analyst = await prisma.user.upsert({
     where: { email: 'analyst@finance.com' },
@@ -65,6 +75,7 @@ async function main() {
       isActive: true,
     },
   });
+  console.log('✓ Analyst user created/updated:', analyst.email);
 
   const viewer = await prisma.user.upsert({
     where: { email: 'viewer@finance.com' },
@@ -80,6 +91,7 @@ async function main() {
       isActive: true,
     },
   });
+  console.log('✓ Viewer user created/updated:', viewer.email);
 
   const seedYear = 2024;
   const sampleRecords = [
@@ -186,6 +198,8 @@ async function main() {
       },
     });
   }
+  
+  console.log('✓ Sample financial records created/updated');
 }
 
 main()
