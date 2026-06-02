@@ -6,9 +6,7 @@ const app = createApp();
 
 async function startServer() {
   try {
-    // Initialize database on first run
-    await initializeDatabase();
-
+    // Start server immediately (don't block on database init)
     const server = app.listen(env.PORT, () => {
       console.log(`Server running on http://localhost:${env.PORT}`);
       console.log(
@@ -16,6 +14,17 @@ async function startServer() {
       );
       console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
     });
+
+    // Initialize database in background (non-blocking)
+    // NOTE: Skipped on production due to Render-Supabase connectivity issues
+    // if (process.env.NODE_ENV !== 'production') {
+    //   initializeDatabase().catch((err) => {
+    //     console.warn(
+    //       '⚠️  Background database initialization warning:',
+    //       err.message,
+    //     );
+    //   });
+    // }
 
     server.on('error', (err: NodeJS.ErrnoException) => {
       if (err.code === 'EADDRINUSE') {
