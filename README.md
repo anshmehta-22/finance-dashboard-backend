@@ -205,53 +205,6 @@ The project is deployed on Render with Supabase PostgreSQL.
 
 **Swagger Docs:** https://finance-data-processing-nn74.onrender.com/api/docs
 
-### Render + Supabase Setup
-
-1. **Create Supabase project** — Get PostgreSQL connection details
-2. **Set environment variables in Render dashboard:**
-   - `DATABASE_URL` — Supabase PostgreSQL connection string (can use direct port 5432 or pooler port 6543; if using pooler, run migrations separately with direct connection)
-   - `JWT_SECRET` — 32-byte hex string
-   - `NODE_ENV` — `production`
-   - `PORT` — `3000`
-   - `SEED_ADMIN_PASSWORD`, `SEED_ANALYST_PASSWORD`, `SEED_VIEWER_PASSWORD` — Strong passwords
-3. **Render build command:** `NODE_ENV=development npm install && npx prisma generate && npm run build`
-4. **Render start command:** `node dist/server.js`
-5. **Seed the database:**
-   - Run `npm run seed` locally with production `DATABASE_URL`, OR
-   - Connect to Supabase console and seed manually via SQL
-   - **Note:** Database initialization is disabled in production (Render-Supabase connectivity issues); seeding must happen before or after deployment
-
-### Migrating from SQLite to PostgreSQL
-
-Only two things change:
-
-1. Update `prisma/schema.prisma` datasource:
-
-```prisma
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-```
-
-2. Set `DATABASE_URL` to a PostgreSQL connection string in your environment.
-
-Then run:
-
-```bash
-npx prisma migrate deploy
-```
-
-No application code changes needed.
-
-### Known Limitations in Production
-
-- **Manual database seeding required** — Database initialization is disabled due to Render-Supabase connectivity issues. Seed must be run locally before deploying or manually via Supabase console after deployment.
-- **Supabase transaction pooler compatibility** — The pgBouncer pooler (port 6543) has compatibility issues with Prisma's schema engine. Use direct connection (port 5432) for migrations; the pooler is suitable for application queries only.
-- **Rate limiting is in-memory** — works for single-instance deployment; needs Redis-backed store for horizontal scaling.
-- **No JWT token revocation** — tokens are valid until expiry; mitigated by 7-day expiry window.
-- **Cold starts on Render** (~30s after inactivity) — acceptable for portfolio use.
-
 ## Folder Structure Overview
 
 ```text
