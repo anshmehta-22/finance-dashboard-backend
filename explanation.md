@@ -141,6 +141,7 @@ The application is deployed on Render with Supabase PostgreSQL:
 - **Deployment URL:** https://finance-data-processing-nn74.onrender.com
 - **Build Command:** `NODE_ENV=development npm install && npx prisma generate && npm run build`
 - **Start Command:** `node dist/server.js`
+- **Database Initialization:** Database init code exists but is currently **disabled everywhere** (commented out in `src/server.ts`). Both local development and production require manual seeding via `npm run seed` before testing.
 
 ### Database Migration
 
@@ -156,9 +157,11 @@ Key insight: Prisma's database-agnostic architecture meant schema and queries re
 
 ### Known Limitations in Production
 
-- Rate limiting is in-memory — sufficient for single-instance deployment but needs a Redis-backed store (e.g. `rate-limit-redis`) for horizontal scaling
-- No JWT token revocation — tokens are valid until expiry; acceptable at this scope, mitigated by 7-day expiry window
-- Cold starts on Render (~30s after inactivity) — acceptable for portfolio use
+- **Manual seeding required** — Database initialization is disabled due to Render-Supabase connectivity issues. Run `npm run seed` locally before deploying, or seed manually via Supabase console after deployment.
+- **Transaction pooler compatibility** — Supabase's pgBouncer transaction pooler has compatibility issues with Prisma schema engine. Use direct connection (port 5432) for migrations; pooler (port 6543) is suitable for application queries only.
+- **Rate limiting is in-memory** — sufficient for single-instance deployment but needs a Redis-backed store (e.g. `rate-limit-redis`) for horizontal scaling
+- **No JWT token revocation** — tokens are valid until expiry; acceptable at this scope, mitigated by 7-day expiry window
+- **Cold starts on Render** (~30s after inactivity) — acceptable for portfolio use
 
 ## Build Order
 
@@ -185,6 +188,8 @@ Key insight: Prisma's database-agnostic architecture meant schema and queries re
 | 2026-04-05 | Deployed to Railway with PostgreSQL                 | Validates Prisma's database-agnostic design; migration required only a datasource config change |
 | 2026-04-05 | Trust proxy enabled in Express | Required for correct IP detection and rate limiting behind Railway's reverse proxy |
 | 2026-06-01 | Migrated to Render + Supabase | Free tier without session limits; Supabase provides persistent PostgreSQL without infrastructure management |
+| 2026-06-03 | Disabled automatic database initialization | Render cannot reach Supabase during startup/build; manual seeding via `npm run seed` is more explicit and reliable |
+| 2026-06-03 | Fixed pooler prepared statement conflict | Use direct connection (port 5432) for migrations, pooler (port 6543) for application queries |
 
 ## If You Feel Lost
 

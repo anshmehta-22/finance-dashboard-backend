@@ -14,11 +14,11 @@ Role-based backend API for a finance dashboard with secure auth, record manageme
 
 ## Live Deployment
 
-**Production URL:** https://finance-dashboard-backend-production-0afc.up.railway.app
+**Production URL:** https://finance-data-processing-nn74.onrender.com
 
-**API Documentation:** https://finance-dashboard-backend-production-0afc.up.railway.app/api/docs
+**API Documentation:** https://finance-data-processing-nn74.onrender.com/api/docs
 
-Deployed on Railway with PostgreSQL database.
+Deployed on Render with Supabase PostgreSQL database.
 
 ## Prerequisites
 
@@ -61,11 +61,13 @@ openssl rand -hex 32
 npx prisma migrate dev
 ```
 
-5. Seed database:
+5. Seed database with initial users and sample records:
 
 ```bash
 npm run seed
 ```
+
+**Note:** Database initialization is not automatic. You must run `npm run seed` manually to populate the database before testing or deploying.
 
 6. Start development server:
 
@@ -78,10 +80,9 @@ npm run dev
 Swagger UI is available at:
 
 - **Local:** `http://localhost:3000/api/docs`
-- **Production:** `https://finance-dashboard-backend-production-0afc.up.railway.app/api/docs`
+- **Production:** `https://finance-data-processing-nn74.onrender.com/api/docs`
 
-The production Swagger UI is live and fully interactive — 
-No local setup needed to explore the API.
+The production Swagger UI includes both local and production server options for interactive testing — no local setup needed to explore the API.
 
 ## API Endpoints
 
@@ -183,24 +184,42 @@ Coverage includes integration tests for:
 - Dashboard summary/category/trends/recent endpoints
 - RBAC enforcement across roles and protected routes
 
+**Note:** Tests create their own database schema and data dynamically — no seed step needed. Each test run resets the test database.
+
 ## Design Decisions & Tradeoffs
 
 - **TypeScript** chosen for compile-time safety — role and permission strings must match exactly across middleware and routes, and type errors catch these mismatches before runtime.
-- **SQLite + Prisma** for local development; PostgreSQL for production on Railway. Switching required only a one-line datasource change in `schema.prisma` — no application code touched.
+- **SQLite + Prisma** for local development; PostgreSQL for production on Render+Supabase. Switching required only a one-line datasource change in `schema.prisma` — no application code touched.
 - **Permission-string RBAC** over hardcoded role checks — adding a new role or changing permissions is a config change in one file (`rbac.middleware.ts`), not a change across every route.
 - **Soft delete over hard delete** — financial records should never be permanently destroyed. The `deletedAt` field preserves audit history and keeps records recoverable by admin.
 - **Two-tier rate limiting** — auth endpoints have a stricter limit (10 req/15min) than the general API (100 req/15min) because login is the primary brute-force target.
 - **JWT over sessions** — stateless auth means no session storage needed; the backend scales horizontally without instance coordination.
 - **Seed passwords via env vars** — avoids hardcoded weak credentials even in development seed data.
-- **Trust proxy enabled** — required for Railway deployment so rate limiting and IP detection work correctly behind Railway's reverse proxy.
+- **Trust proxy enabled** — required for reverse-proxy deployments so rate limiting and IP detection work correctly.
 
 ## Production Deployment
 
-The project is live on Railway with a PostgreSQL database.
+The project is deployed on Render with Supabase PostgreSQL.
 
-**Live URL:** https://finance-dashboard-backend-production-0afc.up.railway.app
+**Live URL:** https://finance-data-processing-nn74.onrender.com
 
-**Swagger Docs:** https://finance-dashboard-backend-production-0afc.up.railway.app/api/docs
+**Swagger Docs:** https://finance-data-processing-nn74.onrender.com/api/docs
+
+### Render + Supabase Setup
+
+1. **Create Supabase project** — Get PostgreSQL connection details
+2. **Set environment variables in Render dashboard:**
+   - `DATABASE_URL` — Supabase PostgreSQL connection string (can use direct port 5432 or pooler port 6543; if using pooler, run migrations separately with direct connection)
+   - `JWT_SECRET` — 32-byte hex string
+   - `NODE_ENV` — `production`
+   - `PORT` — `3000`
+   - `SEED_ADMIN_PASSWORD`, `SEED_ANALYST_PASSWORD`, `SEED_VIEWER_PASSWORD` — Strong passwords
+3. **Render build command:** `NODE_ENV=development npm install && npx prisma generate && npm run build`
+4. **Render start command:** `node dist/server.js`
+5. **Seed the database:**
+   - Run `npm run seed` locally with production `DATABASE_URL`, OR
+   - Connect to Supabase console and seed manually via SQL
+   - **Note:** Database initialization is disabled in production (Render-Supabase connectivity issues); seeding must happen before or after deployment
 
 ### Migrating from SQLite to PostgreSQL
 
@@ -225,18 +244,13 @@ npx prisma migrate deploy
 
 No application code changes needed.
 
-### Railway Setup (reference)
+### Known Limitations in Production
 
-- Add PostgreSQL plugin — Railway injects `DATABASE_URL` automatically
-- Set `JWT_SECRET`, `NODE_ENV=production`, and seed passwords in Railway dashboard
-- Start command: `npm run build && npx prisma migrate deploy && npm start`
-- Seed once after first deploy via Railway terminal: `npm run seed`
-
-### Known Production Limitations
-
-- Rate limiting is in-memory — works for single instance; needs a Redis-backed store for horizontal scaling
-- JWT tokens are valid until expiry — no revocation mechanism; mitigated by short expiry window
-- Trends grouping is done at the application layer due to SQLite's lack of `date_trunc`; in PostgreSQL this would be a cleaner raw SQL query
+- **Manual database seeding required** — Database initialization is disabled due to Render-Supabase connectivity issues. Seed must be run locally before deploying or manually via Supabase console after deployment.
+- **Supabase transaction pooler compatibility** — The pgBouncer pooler (port 6543) has compatibility issues with Prisma's schema engine. Use direct connection (port 5432) for migrations; the pooler is suitable for application queries only.
+- **Rate limiting is in-memory** — works for single-instance deployment; needs Redis-backed store for horizontal scaling.
+- **No JWT token revocation** — tokens are valid until expiry; mitigated by 7-day expiry window.
+- **Cold starts on Render** (~30s after inactivity) — acceptable for portfolio use.
 
 ## Folder Structure Overview
 
