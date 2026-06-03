@@ -14,8 +14,12 @@ const options: swaggerJsdoc.Options = {
         description: 'Local development server',
       },
       {
+        url: `https://finance-data-processing-nn74.onrender.com`,
+        description: 'Render + Supabase (Production)',
+      },
+      {
         url: `https://finance-dashboard-backend-production-0afc.up.railway.app`,
-        description: 'Railway server',
+        description: 'Railway server (Deprecated)',
       },
     ],
     components: {
