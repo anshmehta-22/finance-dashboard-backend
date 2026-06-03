@@ -7,7 +7,7 @@ Role-based backend API for a finance dashboard with secure auth, record manageme
 - TypeScript
 - Node.js + Express
 - Prisma ORM
-- SQLite (local development) / PostgreSQL (production)
+- PostgreSQL (local & production)
 - JWT (`jsonwebtoken`)
 - Zod (request validation)
 - Swagger (`swagger-jsdoc`, `swagger-ui-express`)
@@ -189,7 +189,7 @@ Coverage includes integration tests for:
 ## Design Decisions & Tradeoffs
 
 - **TypeScript** chosen for compile-time safety — role and permission strings must match exactly across middleware and routes, and type errors catch these mismatches before runtime.
-- **SQLite + Prisma** for local development; PostgreSQL for production on Render+Supabase. Switching required only a one-line datasource change in `schema.prisma` — no application code touched.
+- **PostgreSQL everywhere** — both local development and production use the same database engine, eliminating database-specific quirks and ensuring dev/prod parity.
 - **Permission-string RBAC** over hardcoded role checks — adding a new role or changing permissions is a config change in one file (`rbac.middleware.ts`), not a change across every route.
 - **Soft delete over hard delete** — financial records should never be permanently destroyed. The `deletedAt` field preserves audit history and keeps records recoverable by admin.
 - **Two-tier rate limiting** — auth endpoints have a stricter limit (10 req/15min) than the general API (100 req/15min) because login is the primary brute-force target.

@@ -16,7 +16,7 @@ Backend API for a finance dashboard with:
 
 - Keep authorization rules centralized and explicit.
 - Keep module boundaries clear (`router -> controller -> service`).
-- Keep local setup friction low (SQLite + Prisma).
+- Keep local setup consistent with production (PostgreSQL across all environments).
 - Keep API behavior testable and documented.
 
 ## Technical Stack
@@ -26,7 +26,7 @@ Backend API for a finance dashboard with:
 | Language   | TypeScript               | Strong typing and safer refactoring        |
 | Framework  | Express                  | Lightweight, explicit request pipeline     |
 | ORM        | Prisma                   | Typed DB access and migration workflow     |
-| Database   | SQLite (dev) / PostgreSQL (prod) | Zero-infra local development, production-ready deployment |
+| Database   | PostgreSQL (local & production) | Single database engine for consistency; no dev/prod surprises |
 | Validation | Zod                      | Runtime validation aligned with TypeScript |
 | Auth       | JWT                      | Stateless, standard API authentication     |
 | API Docs   | Swagger                  | Fast endpoint discoverability and testing  |
@@ -143,17 +143,15 @@ The application is deployed on Render with Supabase PostgreSQL:
 - **Start Command:** `node dist/server.js`
 - **Database Initialization:** Database init code exists but is currently **disabled everywhere** (commented out in `src/server.ts`). Both local development and production require manual seeding via `npm run seed` before testing.
 
-### Database Migration
+### Database Setup
 
-Migrating from local SQLite to Supabase PostgreSQL involved:
+Local development requires a PostgreSQL database. You can:
 
-1. Create Supabase project and get connection credentials
-2. Generate initial migration: `npx prisma migrate dev --name init`
-3. Apply migration: `npx prisma migrate deploy`
-4. Seed data: `npm run seed`
-5. Update Render environment with `DATABASE_URL` pointing to Supabase
+1. Use Supabase (free tier): Create a project at supabase.com and get a connection string
+2. Use a local PostgreSQL instance: Install PostgreSQL locally and create a database
+3. Use Docker: Run `docker run -p 5432:5432 -e POSTGRES_PASSWORD=password postgres`
 
-Key insight: Prisma's database-agnostic architecture meant schema and queries required no changes — only the datasource connection URL changed.
+Set `DATABASE_URL` in `.env` to your PostgreSQL connection string and run migrations as normal.
 
 ### Known Limitations in Production
 
@@ -193,7 +191,7 @@ Key insight: Prisma's database-agnostic architecture meant schema and queries re
 
 ## If You Feel Lost
 
-- Tests failing? Check whether `test.db` is corrupted. Delete it and rerun `npm test`.
+- Migrations failing? Ensure your `DATABASE_URL` is a valid PostgreSQL connection string
 - Rate limit hitting in dev? Temporarily increase `max` values in `src/config/rateLimiter.ts`.
 - Seed failing? Make sure `SEED_ADMIN_PASSWORD`, `SEED_ANALYST_PASSWORD`, and `SEED_VIEWER_PASSWORD` are all set in `.env` before running `npm run seed`
 - ESLint not running? Run `npm install` first — the TypeScript ESLint parser is in devDependencies
